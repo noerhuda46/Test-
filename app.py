@@ -371,8 +371,18 @@ if page == "📊 Dashboard":
         with col2:
             st.markdown("**📊 Trend Interpretation:**")
             for _, row in df_trend.iterrows():
-                slope = row['Slope'] if 'Slope' in row.index else 0
-                product = row['Product']
+                # Get slope from available columns
+                slope = 0
+                for col_name in ['Slope_Kg_Per_Bulan', 'Slope', 'slope']:
+                    if col_name in row.index:
+                        slope = float(row[col_name])
+                        break
+                # Get product from available columns
+                product = 'N/A'
+                for col_name in ['Produk', 'Product', 'produk']:
+                    if col_name in row.index:
+                        product = str(row[col_name])
+                        break
                 interpretation = get_trend_interpretation(slope)
                 st.markdown(f"**{product}**  \n{interpretation}")
             
@@ -414,11 +424,14 @@ if page == "📊 Dashboard":
             st.markdown("**🔍 Key Insights:**")
             
             # Find top preferences
-            top_prefs = df_preference.nlargest(3, 'Preference_Percentage')
+            top_prefs = df_preference.nlargest(3, 'Preference_Percentage') if 'Preference_Percentage' in df_preference.columns else df_preference.head(3)
             for idx, row in top_prefs.iterrows():
+                product_name = row.get('Produk', row.get('Product', 'N/A')) if hasattr(row, 'get') else 'N/A'
+                category = row.get('Kategori', row.get('Category', 'N/A')) if hasattr(row, 'get') else 'N/A'
+                pref_pct = row.get('Preference_Percentage', 0) if hasattr(row, 'get') else 0
                 st.markdown(f"""
-                **{row['Product']}** → {row['Category']}
-                - {row['Preference_Percentage']:.1f}% preference
+                **{product_name}** → {category}
+                - {pref_pct:.1f}% preference
                 """)
             
             st.markdown("**💡 Strategy:**")
@@ -484,8 +497,18 @@ elif page == "📈 Analisis Trend":
         with col2:
             st.markdown("### 📊 Interpretasi Trend")
             for _, row in df_trend.iterrows():
-                slope = row['Slope'] if 'Slope' in row.index else 0
-                product = row['Product']
+                # Get slope from available columns
+                slope = 0
+                for col_name in ['Slope_Kg_Per_Bulan', 'Slope', 'slope']:
+                    if col_name in row.index:
+                        slope = float(row[col_name])
+                        break
+                # Get product from available columns
+                product = 'N/A'
+                for col_name in ['Produk', 'Product', 'produk']:
+                    if col_name in row.index:
+                        product = str(row[col_name])
+                        break
                 st.markdown(f"**{product}** ({slope:.2f})")
                 st.markdown(f"> {get_trend_interpretation(slope)}")
         
@@ -514,9 +537,12 @@ elif page == "❤️ Preferensi Customer":
         for idx, (i, row) in enumerate(top_3.iterrows()):
             col = [col1, col2, col3][idx]
             with col:
+                product_name = row.get('Produk', row.get('Product', 'N/A')) if hasattr(row, 'get') else 'N/A'
+                category = row.get('Kategori', row.get('Category', 'N/A')) if hasattr(row, 'get') else 'N/A'
+                pref_pct = row.get('Preference_Percentage', 0) if hasattr(row, 'get') else 0
                 st.metric(
-                    f"{row['Product']} → {row['Category']}",
-                    f"{row['Preference_Percentage']:.1f}%"
+                    f"{product_name} → {category}",
+                    f"{pref_pct:.1f}%"
                 )
         
         st.markdown("---")
