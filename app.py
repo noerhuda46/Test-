@@ -366,7 +366,7 @@ if page == "📊 Dashboard":
         
         with col1:
             fig_trend = create_trend_chart(df_trend)
-            st.plotly_chart(fig_trend, use_container_width=True)
+            st.plotly_chart(fig_trend, width='stretch')
         
         with col2:
             st.markdown("**📊 Trend Interpretation:**")
@@ -403,7 +403,7 @@ if page == "📊 Dashboard":
                 'Volume': '{:,.0f}',
                 'Revenue': '{:,.0f}'
             }),
-            use_container_width=True
+            width='stretch'
         )
     
     else:
@@ -424,7 +424,11 @@ if page == "📊 Dashboard":
             st.markdown("**🔍 Key Insights:**")
             
             # Find top preferences
-            top_prefs = df_preference.nlargest(3, 'Preference_Percentage') if 'Preference_Percentage' in df_preference.columns else df_preference.head(3)
+            if 'Preference_Percentage' in df_preference.columns:
+                top_prefs = df_preference.nlargest(3, 'Preference_Percentage')
+            else:
+                top_prefs = df_preference.head(3)
+                
             for idx, row in top_prefs.iterrows():
                 product_name = row.get('Produk', row.get('Product', 'N/A')) if hasattr(row, 'get') else 'N/A'
                 category = row.get('Kategori', row.get('Category', 'N/A')) if hasattr(row, 'get') else 'N/A'
@@ -443,14 +447,23 @@ if page == "📊 Dashboard":
         
         # Detailed Preference Results
         st.markdown("#### 📋 Detailed Preference Results")
-        st.dataframe(
-            df_preference.sort_values('Preference_Percentage', ascending=False).style.format({
+        
+        # Check if required columns exist before sorting and formatting
+        if 'Preference_Percentage' in df_preference.columns:
+            sorted_df = df_preference.sort_values('Preference_Percentage', ascending=False)
+            format_dict = {
                 'Preference_Percentage': '{:.1f}%',
                 'Transactions': '{:,.0f}',
                 'Revenue_IDR': '{:,.0f}'
-            }),
-            use_container_width=True
-        )
+            }
+            # Only include columns that exist in the dataframe
+            available_formats = {k: v for k, v in format_dict.items() if k in sorted_df.columns}
+            st.dataframe(
+                sorted_df.style.format(available_formats),
+                use_container_width=True
+            )
+        else:
+            st.dataframe(df_preference, use_container_width=True)
     
     else:
         st.warning("⚠️ Data preferensi tidak tersedia")
@@ -492,7 +505,7 @@ elif page == "📈 Analisis Trend":
         
         with col1:
             fig = create_trend_chart(df_trend)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         with col2:
             st.markdown("### 📊 Interpretasi Trend")
@@ -525,14 +538,17 @@ elif page == "❤️ Preferensi Customer":
         st.error("Data preferensi tidak tersedia")
     else:
         fig = create_preference_heatmap(df_pref)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         st.markdown("---")
         st.markdown("### 📊 Top Preferences")
         
         col1, col2, col3 = st.columns(3)
         
-        top_3 = df_pref.nlargest(3, 'Preference_Percentage')
+        if 'Preference_Percentage' in df_pref.columns:
+            top_3 = df_pref.nlargest(3, 'Preference_Percentage')
+        else:
+            top_3 = df_pref.head(3)
         
         for idx, (i, row) in enumerate(top_3.iterrows()):
             col = [col1, col2, col3][idx]
@@ -547,9 +563,14 @@ elif page == "❤️ Preferensi Customer":
         
         st.markdown("---")
         st.markdown("### 📋 Semua Data")
+        if 'Preference_Percentage' in df_pref.columns:
+            sorted_df = df_pref.sort_values('Preference_Percentage', ascending=False)
+        else:
+            sorted_df = df_pref
+            
         st.dataframe(
-            df_pref.sort_values('Preference_Percentage', ascending=False),
-            use_container_width=True
+            sorted_df,
+            width='stretch'
         )
 
 elif page == "📋 Action Plan":
@@ -589,7 +610,7 @@ elif page == "🎯 KPI & Proyeksi":
     if not df_trans.empty:
         metrics = calculate_metrics(df_trans)
         fig = create_revenue_projection(metrics['total_revenue'], 20, 6)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 elif page == "ℹ️ Tentang":
     st.header("ℹ️ Tentang Dashboard")
